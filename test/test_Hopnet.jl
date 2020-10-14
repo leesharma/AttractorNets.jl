@@ -43,6 +43,21 @@ end
     @test a_i(0,-1)   == -1
 end
 
+@testset "next activation" begin
+    a1 = [1 1 1 1]'
+    a2 = [1 -1 1 -1]'
+    a3 = [1 1 -1 -1]'
+    A = [a1 a2 a3]
+    W = learn(4,A)
+
+    @test a_i(W, a2, 1) ==  1
+    @test a_i(W, a2, 2) == -1
+    @test a_i(W, a2, 3) ==  1
+    @test a_i(W, a2, 4) == -1
+
+    @test a_i(W, [-1;1;1;1], 1) == 1
+end
+
 @testset "energy" begin
     a1 = [1 1 1 1]'
     a2 = [1 -1 1 -1]'
@@ -71,4 +86,24 @@ end
     @test is_fixedpoint(W, complement(a1))
     @test is_fixedpoint(W, complement(a2))
     @test is_fixedpoint(W, complement(a3))
+end
+
+@testset "run epoch" begin
+    a1 = [1 1 1 1]'
+    a2 = [1 -1 1 -1]'
+    a3 = [1 1 -1 -1]'
+    A = [a1 a2 a3]
+    W = learn(4,A)
+
+    # fixedpoint
+    @test all(run_epoch(W, a1) .== a1)
+
+    # non-fixedpoint (1 epoch to stable)
+    a = [-1 1 1 1]'
+    a_new1 = run_epoch(W, a; node_order=[1 2 3 4])
+    a_new2 = run_epoch(W, a_new1; node_order=[1 2 3 4])
+
+    @test any(a_new1 .!= a)
+    @test isequal(a_new1, [1 1 1 1]')
+    @test isequal(a_new2, a_new1)
 end
