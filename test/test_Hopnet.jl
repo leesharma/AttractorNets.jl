@@ -107,3 +107,28 @@ end
     @test isequal(a_new1, [1 1 1 1]')
     @test isequal(a_new2, a_new1)
 end
+
+@testset "run to fixedpoint" begin
+    a1 = [1 1 1 1]'
+    a2 = [1 -1 1 -1]'
+    a3 = [1 1 -1 -1]'
+    A = [a1 a2 a3]
+    W = learn(4,A)
+
+    # fixedpoint
+    steps, a1_new = run_to_fixedpoint(W, a1; node_order_fn=_->[1 2 3 4])
+    @test steps == 0
+    @test isequal(a1_new, a1)
+
+    # non-fixedpoint
+    a = [-1 1 1 1]'
+    steps, a_new = run_to_fixedpoint(W, a; node_order_fn=_->[1 2 3 4])
+    @test steps == 1
+    @test !isequal(a_new, a)
+    @test isequal(a_new, [1 1 1 1]')
+
+    # order can matter
+    steps, a_new = run_to_fixedpoint(W, a; node_order_fn=_->[4 1 2 3])
+    @test steps == 1
+    @test isequal(a_new, [1 1 1 1]')
+end

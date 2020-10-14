@@ -19,11 +19,6 @@ function random_discrete_patterns(N, M)
 end
 export random_patterns
 
-# Query the net
-
-energy(W, a) = -1/2 * a' * W * a
-export energy
-
 # Running the net
 
 in_i(W, a, i) = W[1:end.!==i,i]' * a[1:end.!==i]
@@ -48,5 +43,23 @@ function run_epoch(W, a; node_order=randperm(length(a)))
     ac
 end
 export run_epoch
+
+function run_to_fixedpoint(W, a_init; node_order_fn=_->randperm(length(a)))
+    current_epoch = 0
+    a = copy(a_init)  # non-mutating
+
+    while !is_fixedpoint(W,a)
+        current_epoch += 1
+        a = run_epoch(W,a; node_order=node_order_fn(current_epoch))
+    end
+
+    (current_epoch, a)
+end
+export run_to_fixedpoint
+
+# Query the net
+
+energy(W, a) = -1/2 * a' * W * a
+export energy
 
 end # module
