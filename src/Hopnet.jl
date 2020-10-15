@@ -5,6 +5,7 @@ module Hopnet
 
 using LinearAlgebra: Symmetric, I
 using Random: randperm
+using Plots
 
 include("utils.jl")
 include("learning.jl")
@@ -35,9 +36,12 @@ By default, odes are updated asynchronously in a random order. Update order
 can also be specified by the `node_order_fn`, which should be a lambda that
 takes an index and returns a list of indices for that epoch.
 """
-function run_to_fixedpoint(W, a_init; node_order_fn=_->randperm(length(a_init)), sync=false, max_epochs=1000)
+function run_to_fixedpoint(W, a_init; node_order_fn=_->randperm(length(a_init)), sync=false, max_epochs=1000, do_plot=false)
     current_epoch = 0
     a = copy(a_init)  # non-mutating
+    if do_plot
+        history = a_init
+    end
 
     while !is_fixedpoint(W,a)
         if current_epoch >= max_epochs
@@ -45,11 +49,39 @@ function run_to_fixedpoint(W, a_init; node_order_fn=_->randperm(length(a_init)),
         end
         current_epoch += 1
         a = run_epoch(W,a; node_order=node_order_fn(current_epoch), sync=sync)
+        if do_plot
+            history = [history a]
+        end
+    end
+
+    if do_plot
+        fps=3
+        anim = @animate for a in eachcol([history repeat(history[:,end], inner=(1,fps*2))])
+            plot(reshape(a,(8,8)), st=:heatmap, c=:binary, colorbar=false, yflip=true)
+        end
+        gif(anim, "training.gif", fps = fps)
     end
 
     (current_epoch, a)
 end
 export run_to_fixedpoint
+
+# visualization
+
+function random_capacity_plot(N, M)
+    mean(x) = sum(x)/length(x)
+
+    A = random_discrete_patterns(N,M)
+    W = learn(N, A)
+    stable = [Hopnet.num_stable(learn(N, A[:,1:i]), A[:,1:i]) for i in 1:M]
+    dists = [mean(Hopnet.stable_distances(learn(N, A[:,1:i]), A[:,1:i])) for i in 1:M]
+
+    plot(1:M, stable)
+    plot!(1:M, dists)
+    title!("Random memory capacity of a Hopfield network (N=$(N))")
+    xlabel!("num patterns")
+end
+export random_capacity_plot
 
 # Query the net
 
