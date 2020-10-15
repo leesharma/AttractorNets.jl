@@ -1,6 +1,6 @@
-using Pkg; Pkg.activate("Hopnet"); Pkg.instantiate()
+using Pkg; Pkg.activate("AttractorNets"); Pkg.instantiate()
 
 using Test
 using SafeTestsets
 
-@time @safetestset "Basic Hopnet functions" begin include("test_Hopnet.jl") end
+@time @safetestset "Hopfield Networks" begin include("test_Hopnet.jl") end
