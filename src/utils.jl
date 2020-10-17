@@ -1,7 +1,13 @@
+module AttractorNets
+module Utils
+
+using Plots
+
+
 function random_discrete_patterns(N, M)
     rand((-1,1), N, M)
 end
-export random_patterns
+export random_discrete_patterns
 
 function hamming(a1, a2)
     if length(a1) != length(a2)
@@ -62,3 +68,6 @@ function animate_weights(filename, A; title="Post-training weights", fps=3, cmap
     end
     gif(anim, filename, fps=fps)
 end
+
+end # Utils
+end # AttractorNets

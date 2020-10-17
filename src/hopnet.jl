@@ -1,14 +1,21 @@
 """
 Construct, train, and query Hopfield networks.
 """
+module AttractorNets
 module Hopnet
 
-using LinearAlgebra: Symmetric, I
 using Random: randperm
 using Plots
 
+include("activation.jl")
+using .AttractorNets.Activation: sign_activation
+include("integration.jl")
+using .AttractorNets.Integration: summation
+include("learn.jl")
+using .AttractorNets.Learn: hebbian_learning
+include("run.jl")
 include("utils.jl")
-include("learning.jl")
+using .AttractorNets.Utils: hamming
 
 
 # Training the net
@@ -127,12 +134,7 @@ export stable_distances
 ###
 
 # Private Functions
-
-# integration rule
-in_i(W, a, i) = W[1:end.!==i,i]' * a[1:end.!==i]
-# activation rule
-a_i(in_i, a0)::Int = in_i==0 ? a0 : Int(sign(in_i))
-a_i(W, a, i)::Int = a_i(in_i(W,a,i), a[i])
+a_i(W, a, i)::Int = sign_activation(summation(W,a,i), a[i])
 
 is_fixedpoint(W, a)::Bool = all(a.==run_epoch(W, a))
 
@@ -149,3 +151,4 @@ function run_epoch(W, a_old; node_order=randperm(length(a_old)), sync=false)
 end
 
 end # module Hopnet
+end # module AttractorNets
